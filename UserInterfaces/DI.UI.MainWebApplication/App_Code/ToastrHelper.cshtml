@@ -1,0 +1,76 @@
+﻿@using DI.Common.Enumerations
+@*
+    The following code was adapted from: http://labs.bjfocus.co.uk/2014/06/create-an-mvc-wrapper-for-toastr/
+*@
+@*@helper ShowToastMessages(List<Message> Toasts)
+{
+var counter = 0;
+var SessionToasts = (List<Message>)Session["Toasts"];
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+    @if (SessionToasts != null)
+    {
+        foreach (Message message in SessionToasts)
+        {
+        @: $("#notifications").append('<article class="alert-@ToastrConversions.GetToastTypeFromStatusCode(message.Type).ToString("F") padded"><p>@DateTime.Now.ToString()</p><h4>@message.Title</h4><div>@(new HtmlString(message.Text))</div>@((!string.IsNullOrEmpty(message.Details)) ? "<div>" + (new HtmlString(message.Details)) + "</div>" : "")</article>');
+        counter++;
+        }
+    }
+    else
+    {
+        Session["Toasts"] = new List<Message>();
+    }
+
+    @if (Toasts != null && Toasts.Count() > 0)
+    {
+        foreach (Message message in Toasts)
+        {
+            //var options = new HtmlString("");
+            //try
+            //{
+            //    options = new HtmlString((message.Options).ToString());
+            //}
+            //catch
+            //{
+            //    options = new HtmlString("Error");
+            //}
+            string toastTypeValue = ToastrConversions.GetToastTypeFromStatusCode(message.Type).ToString("F").ToLower();
+            @:toastr.@(toastTypeValue)(
+            @:'@message.Text',
+            @:'@message.Title',
+            @:{
+                @: @(new HtmlString( "\"timeOut\": 7000"))
+                @:});
+
+            if (message.IsPersistent)
+            {
+                ToastrMessage.AddToastr(message, SessionToasts);
+            }
+
+            @: $("#notifications").append('<div class="alert-@ToastrConversions.GetToastTypeFromStatusCode(message.Type).ToString("F").ToLower()) padded"><h4>@message.Title</h4><div>@(new HtmlString(message.Text))</div>@((!string.IsNullOrEmpty(message.Details)) ? "<div>" + (new HtmlString(message.Details)) + "</div>" : "")</div>');
+                       //@: alert($('#notifications').html());
+            //@: $('#notifications').html($('#notifications').html);
+            counter++;
+        }
+
+        Session["Toasts"] = SessionToasts;
+
+    }
+    @if (counter==0)
+    {
+        @: $("#toastlist").hide();
+    }
+    else
+    {
+        @: $("#toastnumber").html(@(counter));
+        @: $("#toastlist").attr("title","System Message" + ((@counter==1) ? "" : "s") + " (" + @counter + ")");
+        @: $("#toastlist").attr("data-original-title","System Message" + ((@counter==1) ? "" : "s") + " (" + @counter + ")");
+    }
+
+
+
+       });
+    </script>
+}*@

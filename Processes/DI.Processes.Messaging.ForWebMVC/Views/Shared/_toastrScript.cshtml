@@ -1,0 +1,77 @@
+﻿@using DI.Core.Messaging.Interfaces
+@using DI.Processes.Messaging.ForWebMVC.Models
+@model List<Toastr>
+
+@{
+    var counter = 0;
+    var SessionToasts = (List<Message>)Session["Toasts"];
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+    @if (SessionToasts != null)
+    {
+        foreach (Message message in SessionToasts)
+        {
+        @: $("#notifications").append('<article class="alert-@Toastr.GetToastTypeFromStatusCode(message.Type).ToString("F") padded"><p>@DateTime.Now.ToString()</p><h4>@message.Title</h4><div>@(new HtmlString(message.Text))</div>@((!string.IsNullOrEmpty(message.Details)) ? "<div>" + (new HtmlString(message.Details)) + "</div>" : "")</article>');
+        counter++;
+        }
+    }
+    else
+    {
+        Session["Toasts"] = new List<Message>();
+    }
+
+    @if (Model != null && Model.Count() > 0)
+    {
+        foreach (Toastr toast in Model)
+        {
+            
+            //var options = new HtmlString("");
+            //try
+            //{
+            //    options = new HtmlString((message.Options).ToString());
+            //}
+            //catch
+            //{
+            //    options = new HtmlString("Error");
+            //}
+            string toastTypeValue = Toastr.GetToastTypeFromStatusCode(toast.Type).ToString("F").ToLower();
+            @:toastr.@(toastTypeValue)(
+            @:'@toast.Text',
+            @:'@toast.Title',
+            @:{
+                @: @(new HtmlString( "\"timeOut\": 7000"))
+                @:});
+
+            if (toast.IsPersistent)
+            {
+                var message = AutoMapper.Mapper.Map<Message>(toast);
+                Toastr.AddToastr(message, SessionToasts);
+            }
+
+            @: $("#notifications").append('<div class="alert-@Toastr.GetToastTypeFromStatusCode(toast.Type).ToString("F").ToLower()) padded"><h4>@toast.Title</h4><div>@(new HtmlString(toast.Text))</div>@((!string.IsNullOrEmpty(toast.Details)) ? "<div>" + (new HtmlString(toast.Details)) + "</div>" : "")</div>');
+                       //@: alert($('#notifications').html());
+            //@: $('#notifications').html($('#notifications').html);
+            counter++;
+        }
+
+        Session["Toasts"] = SessionToasts;
+
+    }
+    @if (counter==0)
+    {
+        @: $("#toastlist").hide();
+    }
+    else
+    {
+        @: $("#toastnumber").html(@(counter));
+        @: $("#toastlist").attr("title","System Message" + ((@counter==1) ? "" : "s") + " (" + @counter + ")");
+        @: $("#toastlist").attr("data-original-title","System Message" + ((@counter==1) ? "" : "s") + " (" + @counter + ")");
+    }
+
+
+
+       });
+    </script>
+}

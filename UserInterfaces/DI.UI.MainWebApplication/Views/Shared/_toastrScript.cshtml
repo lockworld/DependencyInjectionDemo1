@@ -1,0 +1,84 @@
+﻿@using DI.Core.Messaging.Interfaces
+@using DI.Processes.Messaging.ForWeb.Entities
+
+@{
+    var counter = 0;
+    var SessionToasts = (List<IMessage>)Session["Toasts"];
+    if (SessionToasts==null)
+    {
+        SessionToasts = new List<IMessage>();
+    }
+    var imessageList = (List<IMessage>)HttpContext.Current.Items["Messages"];
+    if (imessageList==null)
+    {
+        imessageList = new List<IMessage>();
+    }
+    var Toasts = ToastrConversions.GetMessageListFromIMessageList(imessageList);
+    var tts = ToastrConversions.GetToastrListFromIMessageList(imessageList);
+    <!--Toasts=@Toasts.Count()-->
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+    @if (SessionToasts != null)
+    {
+        foreach (Toastr toast in ToastrConversions.GetToastrListFromIMessageList(SessionToasts))
+        {
+        @: $("#notifications").append('<article class="alert-@ToastrConversions.GetToastTypeFromStatusCode(toast.Type).ToString("F").ToLower() padded"><p>@DateTime.Now.ToString()</p><h4>@toast.Title</h4><div>@(new HtmlString(toast.Text))</div>@((!string.IsNullOrEmpty(toast.Details)) ? "<div>" + (new HtmlString(toast.Details)) + "</div>" : "")</article>');
+        counter++;
+        }
+    }
+    else
+    {
+        Session["Toasts"] = new List<Message>();
+    }
+
+    @foreach (Toastr toast in Toasts)
+    {
+
+        //var options = new HtmlString("");
+        //try
+        //{
+        //    options = new HtmlString((message.Options).ToString());
+        //}
+        //catch
+        //{
+        //    options = new HtmlString("Error");
+        //}
+        string toastTypeValue = ToastrConversions.GetToastTypeFromStatusCode(toast.Type).ToString("F").ToLower().ToLower();
+        @:toastr.@(toastTypeValue)(
+        @:'@toast.Text',
+        @:'@toast.Title (@toastTypeValue)',
+        @:{
+            @: @(new HtmlString( "\"timeOut\": 7000"))
+            @:});
+
+        if (toast.IsPersistent)
+        {
+            var message = toast as Message;
+            ToastrConversions.AddToastr(message, SessionToasts);
+        }
+
+        @: $("#notifications").append('<div class="alert-@ToastrConversions.GetToastTypeFromStatusCode(toast.Type).ToString("F").ToLower()) padded"><h4>@toast.Title</h4><div>@(new HtmlString(toast.Text))</div>@((!string.IsNullOrEmpty(toast.Details)) ? "<div>" + (new HtmlString(toast.Details)) + "</div>" : "")</div>');
+                    //@: alert($('#notifications').html());
+        //@: $('#notifications').html($('#notifications').html);
+        counter++;
+    }
+
+    Session["Toasts"] = SessionToasts;
+    @if (counter==0)
+    {
+        @: $("#toastlist").hide();
+    }
+    else
+    {
+        @: $("#toastnumber").html(@(counter));
+        @: $("#toastlist").attr("title","System Message" + ((@counter==1) ? "" : "s") + " (" + @counter + ")");
+        @: $("#toastlist").attr("data-original-title","System Message" + ((@counter==1) ? "" : "s") + " (" + @counter + ")");
+    }
+
+
+
+       });
+    </script>
+}
